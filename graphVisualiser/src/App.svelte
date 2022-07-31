@@ -3,7 +3,7 @@
   import * as d3 from "d3";
   const euclidieanDistance = (a, b) => Math.sqrt(a * a + b * b);
   const circleRadius = 20;
-  const randomHsl = () => `hsla(${Math.random() * 360}, 100%, 50%, 1)`;
+  const randomHsl = () => `hsla(200, 100%, 50%, 1)`; // `hsla(${Math.random() * 360}, 100%, 50%, 1)`;
   const modes = {
     move: "move",
     selectNode: "selectNode",
@@ -13,10 +13,12 @@
   };
   Object.freeze(modes);
 
-  const isgraphDirected = false;
+  let isgraphDirected = true;
+  let isGraphWeighted = true;
 
   let currentMode = modes.move;
   let selectedNode;
+
   class Node {
     constructor(value, x, y) {
       this.value = value;
@@ -106,7 +108,7 @@
         .attr("y", (l) => (l.source.y + l.target.y) / 2)
         .attr("text-anchor", "middle")
         .attr("class", "lineLength")
-        .style("fill", "red")
+        .style("fill", `rgba(255, 0, 0, ${isGraphWeighted ? "1" : "0"})`)
         .text(
           (l) =>
             `${euclidieanDistance(
@@ -115,7 +117,11 @@
             ).toFixed(0)}`
         );
 
-      const drag = d3.drag().on("drag", function (d, i) {
+      const drag = d3.drag().on("drag", function (d) {
+        if (currentMode === modes.selectNode) {
+          selectedNode = d.subject;
+          self.update();
+        }
         if (currentMode !== modes.move) {
           return;
         }
@@ -268,6 +274,26 @@
       on:click={() => (currentMode = modes.removeNode)}
     >
       remove node
+    </button>
+
+    <button
+      class="mode {isGraphWeighted ? 'selected-mode' : ''}"
+      on:click={() => {
+        isGraphWeighted = !isGraphWeighted;
+        graph.update();
+      }}
+    >
+      {isGraphWeighted ? "weighted" : "unweighted"}
+    </button>
+
+    <button
+      class="mode {isgraphDirected ? 'selected-mode' : ''}"
+      on:click={() => {
+        isgraphDirected = !isgraphDirected;
+        graph.update();
+      }}
+    >
+      {isgraphDirected ? "directed" : "undirected"}
     </button>
   </div>
 </div>
